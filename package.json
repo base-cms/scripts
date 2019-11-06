@@ -1,0 +1,30 @@
+{
+  "name": "@base-cms/scripts",
+  "version": "0.0.1",
+  "description": "A collection of post-import cleanup scripts",
+  "main": "src/index.js",
+  "repository": "https://github.com/base-cms/scripts",
+  "author": "Josh Worden <josh@limit0.io>",
+  "license": "MIT",
+  "dependencies": {
+    "@base-cms/canonical-path": "^1.0.0-beta.12",
+    "@base-cms/db": "^1.0.0-beta.12",
+    "@base-cms/env": "^1.0.0-beta.1",
+    "@base-cms/object-path": "^1.0.0-beta.4",
+    "dotenv": "^8.2.0",
+    "inquirer": "^7.0.0"
+  },
+  "scripts": {
+    "lint": "eslint --ext .js --max-warnings 5 ./",
+    "start": "./node_modules/.bin/gulp",
+    "test": "yarn lint"
+  },
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "gulp": "^4.0.2",
+    "gulp-cached": "^1.1.1",
+    "gulp-eslint": "^6.0.0"
+  }
+}
