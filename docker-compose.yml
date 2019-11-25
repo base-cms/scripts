@@ -1,0 +1,43 @@
+version: '3.7'
+
+x-env-defaults: &env
+  YARN_CACHE_FOLDER: /.yarn-cache
+  NODE_ENV: development
+
+x-env-mongo: &env-mongo
+  TENANT_KEY: ${TENANT_KEY-demo_demo}
+  MONGO_DSN: ${MONGO_DSN-mongodb://mongodb:27017}
+  ENABLE_BASEDB_LOGGING: ${ENABLE_BASEDB_LOGGING-}
+
+x-node-defaults: &node
+  tty: true
+  init: true
+  image: node:10.15-alpine
+  entrypoint: ["node"]
+  working_dir: /scripts
+  volumes:
+    - .:/scripts:cached
+    - ./node_modules:/scripts/node_modules:delegated
+    - yarn-cache:/.yarn-cache
+  environment:
+    <<: *env
+
+services:
+  script:
+    <<: *node
+    working_dir: /scripts
+    entrypoint: ["/scripts/node_modules/.bin/gulp"]
+    depends_on:
+      - mongodb
+
+  mongodb:
+    tty: true
+    image: mongo:3.4
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - "10020:27017"
+
+volumes:
+  mongodb: {}
+  yarn-cache: {}
