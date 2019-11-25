@@ -31,8 +31,19 @@ const questions = [
   },
 ];
 
+
+const getInput = () => {
+  try {
+    // eslint-disable-next-line global-require,import/no-unresolved
+    return require('../input.json');
+  } catch (e) {
+    log('Unable to read /input.json file, asking interactively');
+    return inquirer.prompt(questions);
+  }
+};
+
 const run = async () => {
-  const { script, debug, write } = await inquirer.prompt(questions);
+  const { script, debug, write } = await getInput();
   const fn = require(`../${script}`); // eslint-disable-line import/no-dynamic-require,global-require
   await runner(fn, write, debug);
 };
