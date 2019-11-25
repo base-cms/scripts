@@ -5,14 +5,14 @@ const { log } = console;
 const { TENANT_KEY } = process.env;
 const basedb = createDB(TENANT_KEY);
 
-module.exports = async (fn, write = false, debug = true, multi = false) => {
+module.exports = async (fn, write = false, debug = true) => {
   try {
     const client = await basedb.client.connect();
     log(`BaseCMS DB connected to ${client.s.url} for ${basedb.tenant}`);
 
     const contentColl = await basedb.collection('platform', 'Content');
 
-    const updates = await fn(contentColl);
+    const { multi, updates } = await fn(contentColl);
     if (!updates.length) {
       await basedb.close();
       return;

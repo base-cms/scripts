@@ -25,12 +25,6 @@ const questions = [
   },
   {
     type: 'confirm',
-    name: 'multi',
-    message: 'Is this script performing "updateMany"s',
-    default: false,
-  },
-  {
-    type: 'confirm',
     name: 'write',
     message: 'Execute writes',
     default: false,
@@ -38,14 +32,9 @@ const questions = [
 ];
 
 const run = async () => {
-  const {
-    script,
-    debug,
-    write,
-    multi,
-  } = await inquirer.prompt(questions);
+  const { script, debug, write } = await inquirer.prompt(questions);
   const fn = require(`../${script}`); // eslint-disable-line import/no-dynamic-require,global-require
-  await runner(fn, write, debug, multi);
+  await runner(fn, write, debug);
 };
 
 log('> Booting script selector...');

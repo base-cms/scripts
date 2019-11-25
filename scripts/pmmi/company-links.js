@@ -84,5 +84,8 @@ module.exports = async (contentColl) => {
 
   log(`Found ${results.length} items to update.`);
 
-  return results;
+  return {
+    multi: false,
+    updates: results,
+  };
 };

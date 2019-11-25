@@ -143,5 +143,8 @@ module.exports = async (contentColl) => {
 
   log(`Found ${results.length} companies to update.`);
 
-  return results;
+  return {
+    multi: false,
+    updates: results,
+  };
 };

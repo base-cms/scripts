@@ -36,5 +36,8 @@ module.exports = async (contentColl) => {
 
   log(`Found ${results.length} files.`);
 
-  return results;
+  return {
+    multi: false,
+    updates: results,
+  };
 };

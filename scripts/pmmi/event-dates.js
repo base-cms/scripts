@@ -43,5 +43,8 @@ module.exports = async (contentColl) => {
 
   log(`Found ${results.length} event date updates.`);
 
-  return results;
+  return {
+    multi: false,
+    updates: results,
+  };
 };

@@ -58,5 +58,8 @@ module.exports = async (contentColl) => {
 
   log(`Found ${results.length / 2} duplicates.`);
 
-  return results;
+  return {
+    multi: false,
+    updates: results,
+  };
 };
