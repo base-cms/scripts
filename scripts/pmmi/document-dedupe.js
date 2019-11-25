@@ -3,7 +3,7 @@ const { get, getAsArray } = require('@base-cms/object-path');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving duplicated documents...');
 
   const projection = {
@@ -60,6 +60,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };

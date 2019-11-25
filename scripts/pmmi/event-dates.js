@@ -4,7 +4,7 @@ const moment = require('moment-timezone');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving events with bad dates...');
 
   const cursor = await contentColl.find({
@@ -45,6 +45,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };

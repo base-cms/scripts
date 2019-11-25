@@ -3,7 +3,7 @@ const { get } = require('@base-cms/object-path');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving missing company refs...');
 
   const nids = await contentColl.distinct('legacy.raw.field_companies.und.0.nid', {
@@ -44,6 +44,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: true,
-    updates: results,
+    updates: { content: results },
   };
 };

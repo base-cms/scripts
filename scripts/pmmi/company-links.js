@@ -5,7 +5,7 @@ const dataMapper = require('../../src/data-mapper');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving all companies...');
 
   const fields = [
@@ -86,6 +86,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };

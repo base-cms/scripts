@@ -3,7 +3,7 @@ const { get } = require('@base-cms/object-path');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving articles with embed codes...');
 
   const fields = ['embedCode', 'body'];
@@ -61,6 +61,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };

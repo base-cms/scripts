@@ -3,7 +3,7 @@ const { get } = require('@base-cms/object-path');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving document references...');
 
   const projection = {
@@ -38,6 +38,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };

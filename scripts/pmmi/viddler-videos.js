@@ -5,7 +5,7 @@ const dataMapper = require('../../src/data-mapper');
 
 const { log } = console;
 
-module.exports = async (contentColl) => {
+module.exports = async ({ content: contentColl }) => {
   log('Retrieving videos without embed codes...');
 
   const fields = ['embedCode'];
@@ -68,6 +68,6 @@ module.exports = async (contentColl) => {
 
   return {
     multi: false,
-    updates: results,
+    updates: { content: results },
   };
 };
