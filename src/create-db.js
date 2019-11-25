@@ -4,7 +4,7 @@ const { MONGO_DSN, NODE_ENV } = require('./env');
 
 const appname = `${pkg.name} v${pkg.version} (env: ${NODE_ENV})`;
 
-const client = createMongoClient(MONGO_DSN, { appname });
+const client = createMongoClient(MONGO_DSN, { appname, useUnifiedTopology: true });
 
 module.exports = (tenant, context) => createBaseDB({
   tenant,
