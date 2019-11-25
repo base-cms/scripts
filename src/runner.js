@@ -11,6 +11,7 @@ const buildUpdates = (updates, key, updateKey) => {
     filter,
     $set,
     $addToSet,
+    $pull,
     $unset,
   }) => ({
     [updateKey]: {
@@ -18,6 +19,7 @@ const buildUpdates = (updates, key, updateKey) => {
       update: {
         ...($set && { $set }),
         ...($addToSet && { $addToSet }),
+        ...($pull && { $pull }),
         ...($unset && { $unset }),
       },
     },
