@@ -1,11 +1,6 @@
-const { log } = console;
+const companies = require('../../data/pmmi/company-dedupe').slice(0, 1);
 
-const companies = [
-  // import from CSV once finalized
-  { from: 13322070, to: 13285655 },
-  { from: 13324917, to: 13285656 },
-  // ...
-];
+const { log } = console;
 
 module.exports = async () => {
   log('Building content updates for companies...');
@@ -52,11 +47,18 @@ module.exports = async () => {
     $set: { 'content.$id': to },
   }));
 
+  log('Building redirect updates for companies...');
+  const redirect = companies.map(({ from, to }) => ({
+    filter: { to: new RegExp(`.*/${from}/.*`, 'ig') },
+    $set: { to: `/${to}` },
+  }));
+
   return {
     multi: true,
     updates: {
       content,
       schedule,
+      redirect,
     },
   };
 };

@@ -33,10 +33,12 @@ module.exports = async (fn, write = false, debug = true) => {
 
     const contentColl = await basedb.collection('platform', 'Content');
     const scheduleColl = await basedb.collection('website', 'Schedule');
+    const redirectsColl = await basedb.collection('website', 'Redirects');
 
     const collections = {
       content: contentColl,
       schedule: scheduleColl,
+      redirect: redirectsColl,
     };
 
     const { multi, updates } = await fn(collections);
