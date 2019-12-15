@@ -69,7 +69,7 @@ module.exports = async (fn, write = false, debug = true) => {
       const promises = Object.keys(bulkOps).map(async (key) => {
         const coll = collections[key];
         log(`Beginning ${key} bulk write process...`);
-        const { matchedCount } = await coll.bulkWrite(bulkOps);
+        const { matchedCount } = await coll.bulkWrite(bulkOps[key]);
         log('Bulk write complete.', matchedCount);
       });
       await Promise.all(promises);

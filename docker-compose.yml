@@ -25,6 +25,9 @@ x-node-defaults: &node
 services:
   script:
     <<: *node
+    environment:
+      <<: *env
+      <<: *env-mongo
     working_dir: /scripts
     entrypoint: ["/scripts/node_modules/.bin/gulp"]
     depends_on:

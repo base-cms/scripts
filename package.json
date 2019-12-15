@@ -11,9 +11,15 @@
     "@base-cms/db": "^1.0.0-beta.12",
     "@base-cms/env": "^1.0.0-beta.1",
     "@base-cms/object-path": "^1.0.0-beta.4",
+    "bcrypt": "^3.0.7",
+    "csv-reader": "^1.0.3",
+    "csv-writer": "^1.5.0",
     "dotenv": "^8.2.0",
     "inquirer": "^7.0.0",
-    "moment-timezone": "^0.5.27"
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.27",
+    "node-fetch": "^2.6.0",
+    "uuid": "^3.3.3"
   },
   "scripts": {
     "lint": "eslint --ext .js --max-warnings 5 ./",

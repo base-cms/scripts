@@ -1,4 +1,4 @@
-const companies = require('../../data/pmmi/company-dedupe').slice(0, 1);
+const companies = require('../../data/pmmi/company-dedupe');
 
 const { log } = console;
 
@@ -25,6 +25,9 @@ module.exports = async () => {
           type: 'Company',
         },
       },
+    });
+    ops.push({
+      filter: { 'relatedTo.$id': from },
       $pull: { relatedTo: { $id: from } },
     });
 
@@ -41,7 +44,7 @@ module.exports = async () => {
 
   // Update all schedules to point to the new company
   // @todo what happens if the schedule already exists? will the entire bulk op fail?
-  log('Building schedule updates for companies...');
+  // log('Building schedule updates for companies...');
   const schedule = companies.map(({ from, to }) => ({
     filter: { 'content.$id': from },
     $set: { 'content.$id': to },
@@ -56,9 +59,9 @@ module.exports = async () => {
   return {
     multi: true,
     updates: {
-      content,
+      // content,
       schedule,
-      redirect,
+      // redirect,
     },
   };
 };
