@@ -7,6 +7,7 @@
   "author": "Josh Worden <josh@limit0.io>",
   "license": "MIT",
   "dependencies": {
+    "@base-cms/base4-rest-api": "^1.1.0",
     "@base-cms/canonical-path": "^1.0.0-beta.12",
     "@base-cms/db": "^1.0.0-beta.12",
     "@base-cms/env": "^1.0.0-beta.1",
@@ -15,6 +16,7 @@
     "csv-reader": "^1.0.3",
     "csv-writer": "^1.5.0",
     "dotenv": "^8.2.0",
+    "envalid": "^6.0.0",
     "inquirer": "^7.0.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.27",

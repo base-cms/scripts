@@ -59,9 +59,9 @@ module.exports = async () => {
   return {
     multi: true,
     updates: {
-      // content,
+      content,
       schedule,
-      // redirect,
+      redirect,
     },
   };
 };

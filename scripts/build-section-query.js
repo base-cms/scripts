@@ -3,6 +3,15 @@ const moment = require('moment');
 const { log } = console;
 
 module.exports = async ({ content: contentColl, schedule: scheduleColl }) => {
+  log('Creating indices...');
+  await Promise.all([
+    contentColl.createIndex({ 'sectionQuery.sectionId': 1, 'sectionQuery.optionId': 1 }),
+    contentColl.createIndex({ 'sectionQuery.sectionId': 1, 'sectionQuery.optionId': 1, primaryImage: 1 }),
+    contentColl.createIndex({ 'sectionQuery.start': -1, _id: -1 }),
+    contentColl.createIndex({ 'sectionQuery.end': -1, _id: -1 }),
+  ]);
+  log('Indexing complete.');
+
   log('Retrieving aggregated schedules...');
   const maxDate = moment('2038-01-01T00:00:00Z').toDate();
   const cursor = await scheduleColl.aggregate([
@@ -74,15 +83,6 @@ module.exports = async ({ content: contentColl, schedule: scheduleColl }) => {
     filter: { _id: doc.contentId },
     $set: { sectionQuery: doc.schedules },
   }));
-
-  log('Creating indices...');
-  await Promise.all([
-    contentColl.createIndex({ 'sectionQuery.sectionId': 1, 'sectionQuery.optionId': 1 }),
-    contentColl.createIndex({ 'sectionQuery.sectionId': 1, 'sectionQuery.optionId': 1, primaryImage: 1 }),
-    contentColl.createIndex({ 'sectionQuery.start': -1, _id: -1 }),
-    contentColl.createIndex({ 'sectionQuery.end': -1, _id: -1 }),
-  ]);
-  log('Indexing complete.');
 
   return {
     multi: false,
