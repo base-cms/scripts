@@ -19,7 +19,6 @@ const source = process.argv.pop();
 if (!source || !/^\w+$/.test(source)) throw new Error(`Source parameter is required, encountered "${source}".`);
 
 const appIds = {
-  ogj: new ObjectID('5cf67e2221be593b13b30edf'),
   asumag: new ObjectID('5df0073005aa561c3543fbfd'),
   contractingbusiness: new ObjectID('5df0078f05aa56a96943fbfe'),
   contractormag: new ObjectID('5df007a505aa563aa043fbff'),
@@ -53,6 +52,26 @@ const appIds = {
 const applicationId = appIds[source];
 if (!applicationId) throw new Error(`Unable to find an application ID for ${source}!`);
 
+const filter = (transformed = []) => {
+  const users = {};
+  transformed.forEach((doc) => {
+    const { email, rank } = doc;
+    if (!users[email]) {
+      users[email] = doc;
+    } else if (rank > users[email].rank) {
+      users[email] = doc;
+    }
+  });
+  return Object.keys(users).map((email) => ({ ...users[email], rank: undefined }));
+};
+
+const keys = ['email', 'givenName', 'familyName', 'organization', 'organizationTitle', 'countryCode', 'countryName'];
+const rankUser = (doc) => keys.reduce((obj, k) => {
+  const incr = obj[k] ? 1 : 0;
+  const rank = obj.rank || 0;
+  return { ...obj, rank: rank + incr };
+}, doc);
+
 const transform = async (cursor) => {
   const results = [];
   await iterateCursor(cursor, async (doc) => {
@@ -78,7 +97,7 @@ const transform = async (cursor) => {
       countryName,
       createdAt,
     };
-    results.push(newdoc);
+    results.push(rankUser(newdoc));
   });
   return results;
 };
@@ -92,18 +111,19 @@ const buildUpdates = (docs) => docs.map((doc) => ({
 }));
 
 const main = async () => {
+  log(`Mongo connected using ${MONGO_DSN}`);
   const coll = await client.collection('identity-x-legacy-data', source);
   const user = await client.collection('identity-x', 'app-users');
-  const cursor = await coll.find({ mail: { $exists: true } }, { projection: { raw: 0 } });
+  const cursor = await coll.find({ mail: { $exists: true, $ne: '' } }, { projection: { raw: 0 } });
 
   log('Transforming users.');
   const transformed = await transform(cursor);
   log(`Transformed ${transformed.length} users.`);
-  const updates = buildUpdates(transformed);
+  const updates = buildUpdates(filter(transformed));
   log('Creating index...');
   await user.createIndex({ 'legacy.id': 1, 'legacy.source': 1 });
-  log('Updating users...');
-  await user.bulkWrite(updates);
+  log(`Updating ${updates.length} users...`);
+  await user.bulkWrite(updates, { ordered: false });
   log('Complete!');
 };
 
