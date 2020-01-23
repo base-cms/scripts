@@ -19,22 +19,20 @@ const source = process.argv.pop();
 if (!source || !/^\w+$/.test(source)) throw new Error(`Source parameter is required, encountered "${source}".`);
 
 const appIds = {
+  americanmachinist: new ObjectID('5df0e82405aa56699b43fc2f'),
   asumag: new ObjectID('5df0073005aa561c3543fbfd'),
+  bulktransporter: new ObjectID('5df0e83705aa56c6f243fc30'),
   contractingbusiness: new ObjectID('5df0078f05aa56a96943fbfe'),
   contractormag: new ObjectID('5df007a505aa563aa043fbff'),
   ecmweb: new ObjectID('5df007b605aa565ec343fc00'),
-  electricalmarketing: new ObjectID('5df007c705aa56547d43fc01'),
-  ewweb: new ObjectID('5df007e405aa56cc6c43fc02'),
-  hpac: new ObjectID('5df0080805aa56af7a43fc03'),
-  rermag: new ObjectID('5df0082605aa5695a243fc04'),
-  tdworld: new ObjectID('5df0083505aa568f1543fc05'),
-  americanmachinist: new ObjectID('5df0e82405aa56699b43fc2f'),
-  bulktransporter: new ObjectID('5df0e83705aa56c6f243fc30'),
   ehstoday: new ObjectID('5df0e86e05aa56311743fc31'),
+  electricalmarketing: new ObjectID('5df007c705aa56547d43fc01'),
   electronicdesign: new ObjectID('5df0e87f05aa56586843fc32'),
+  ewweb: new ObjectID('5df007e405aa56cc6c43fc02'),
   fleetowner: new ObjectID('5df0e89005aa56175543fc33'),
   forgingmagazine: new ObjectID('5df0e8a105aa56609143fc34'),
   foundrymag: new ObjectID('5df0e8b205aa567ebb43fc35'),
+  hpac: new ObjectID('5df0080805aa56af7a43fc03'),
   hydraulicspneumatics: new ObjectID('5df0e8dc05aa5681de43fc36'),
   industryweek: new ObjectID('5df0e8f105aa56e67d43fc37'),
   machinedesign: new ObjectID('5df0e90605aa5648c343fc38'),
@@ -43,8 +41,10 @@ const appIds = {
   newequipment: new ObjectID('5df0e97405aa56ad4d43fc3b'),
   powerelectronics: new ObjectID('5df0e98905aa56bf2c43fc3c'),
   refrigeratedtransporter: new ObjectID('5df0e9a805aa562e3843fc3d'),
+  rermag: new ObjectID('5df0082605aa5695a243fc04'),
   sourcetoday: new ObjectID('5df0e9b905aa56edd743fc3e'),
-  'trailer-bodybuilders': new ObjectID('5df0e9d605aa5635d243fc3f'),
+  tdworld: new ObjectID('5df0083505aa568f1543fc05'),
+  trailerbodybuilders: new ObjectID('5df0e9d605aa5635d243fc3f'),
   trucker: new ObjectID('5df0e9e305aa56e43c43fc40'),
   truckfleetmro: new ObjectID('5df0ea0005aa5628cd43fc41'),
 };
@@ -111,7 +111,7 @@ const buildUpdates = (docs) => docs.map((doc) => ({
 }));
 
 const main = async () => {
-  log(`Mongo connected using ${MONGO_DSN}`);
+  log(`\nMongo connected using ${MONGO_DSN} for ${source}`);
   const coll = await client.collection('identity-x-legacy-data', source);
   const user = await client.collection('identity-x', 'app-users');
   const cursor = await coll.find({ mail: { $exists: true, $ne: '' } }, { projection: { raw: 0 } });
@@ -124,7 +124,7 @@ const main = async () => {
   await user.createIndex({ 'legacy.id': 1, 'legacy.source': 1 });
   log(`Updating ${updates.length} users...`);
   await user.bulkWrite(updates, { ordered: false });
-  log('Complete!');
+  log('Complete!\n');
 };
 
 process.on('unhandledRejection', (e) => { throw e; });
