@@ -1,25 +1,21 @@
 /* eslint-disable no-await-in-loop */
 const fetch = require('node-fetch');
-const fs = require('fs');
-const CsvReadableStream = require('csv-reader');
 const uuidv4 = require('uuid/v4');
 const bcrypt = require('bcrypt');
-const { createObjectCsvWriter } = require('csv-writer');
+const readCsv = require('../utils/csv-read');
+const writeCsv = require('../utils/csv-write');
 
 const { BASE4_AUTH_HEADER: Authorization } = process.env;
 const file = '../data/informa-users-2.csv';
 
-const csvWriter = createObjectCsvWriter({
-  path: file,
-  header: [
-    'firstName',
-    'lastName',
-    'username',
-    'email',
-    'plaintext',
-    'hash',
-  ],
-});
+const headers = [
+  'firstName',
+  'lastName',
+  'username',
+  'email',
+  'plaintext',
+  'hash',
+];
 
 const { log } = console;
 
@@ -54,32 +50,6 @@ const urls = [
   'https://manage.truckfleetmro.com',
 ];
 
-const objectify = (rows = []) => {
-  const headers = rows.slice(0, 1).pop();
-  log(headers);
-  return rows.slice(1).map((row) => ({
-    ...(headers[0] && { [headers[0]]: `${row[0]}`.trim() }),
-    ...(headers[1] && { [headers[1]]: `${row[1]}`.trim() }),
-    ...(headers[2] && { [headers[2]]: `${row[2]}`.trim() }),
-    ...(headers[3] && { [headers[3]]: `${row[3]}`.trim() }),
-    ...(headers[4] && { [headers[4]]: `${row[4]}`.trim() }),
-    ...(headers[5] && { [headers[5]]: `${row[5]}`.trim() }),
-  }));
-};
-
-const readCsv = () => new Promise((resolve, reject) => {
-  try {
-    const rows = [];
-    const stream = fs.createReadStream(file, 'utf8');
-    stream
-      .pipe(CsvReadableStream({ parseNumbers: true, parseBooleans: true, trim: true }))
-      .on('data', (row) => rows.push(row))
-      .on('finish', () => resolve(objectify(rows)));
-  } catch (e) {
-    reject(e);
-  }
-});
-
 const updateCsv = async () => {
   log('Read data from CSV');
   const data = await readCsv();
@@ -91,7 +61,7 @@ const updateCsv = async () => {
     user.hash = user.hash.replace('$2b$', '$2y$');
   }
   log('Writing data to CSV');
-  await csvWriter.writeRecords(data);
+  await writeCsv(file, headers, data);
   log('Done!');
 };
 
@@ -135,7 +105,7 @@ const createUser = async (url, payload) => {
 };
 
 const createUsers = async () => {
-  const users = await readCsv();
+  const users = await readCsv(file);
   const payloads = users.map(buildPayload);
   for (let i = 0; i < urls.length; i += 1) {
     const url = urls[i];
