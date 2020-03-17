@@ -38,6 +38,7 @@ services:
     image: mongo:3.4
     volumes:
       - mongodb:/data/db
+      - .:/scripts:cached
     ports:
       - "10020:27017"
 
