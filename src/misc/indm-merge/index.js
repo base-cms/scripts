@@ -23,9 +23,6 @@ const { log } = console;
 const source = process.argv.pop();
 if (!source || !/^\w+$/.test(source)) throw new Error(`Source parameter is required, encountered "${source}".`);
 
-const insert = true;
-const references = true;
-
 const targetPrefix = 'indm_multi';
 const databases = [
   'configuration',
@@ -153,106 +150,102 @@ const merge = async (group, account = 'indm') => {
     const sdb = await client.db(sourceDb);
     const db = await client.db(targetDb);
 
-    if (insert) {
-      log(`Inserting legacy documents from ${sourceDb}`);
-      await Promise.all(collections[key].map(async (collection) => {
-        const coll = db.collection(collection);
-        const scoll = sdb.collection(collection);
-        const cursor = await scoll.find({}, { sort: { _id: 1 }, raw: true });
-        log(`${targetDb}.${collection}: > Creating legacy index`);
-        await coll.createIndex({ 'legacy.source': 1, 'legacy.id': 1 }, { background: true });
-        log(`${targetDb}.${collection}: > Building bulk operations`);
+    log(`Inserting legacy documents from ${sourceDb}`);
+    await Promise.all(collections[key].map(async (collection) => {
+      const coll = db.collection(collection);
+      const scoll = sdb.collection(collection);
+      const cursor = await scoll.find({}, { sort: { _id: 1 }, raw: true });
+      log(`${targetDb}.${collection}: > Creating legacy index`);
+      await coll.createIndex({ 'legacy.source': 1, 'legacy.id': 1 }, { background: true });
+      log(`${targetDb}.${collection}: > Building bulk operations`);
 
-        const bulkOps = [];
-        await iterateCursor(cursor, (buffer) => {
-          const doc = deserialize(buffer);
-          const legacy = { source: sourcePrefix, id: doc._id };
-          bulkOps.push({
+      const bulkOps = [];
+      await iterateCursor(cursor, (buffer) => {
+        const doc = deserialize(buffer);
+        const legacy = { source: sourcePrefix, id: doc._id };
+        bulkOps.push({
+          updateOne: {
+            filter: {
+              'legacy.source': legacy.source,
+              'legacy.id': legacy.id,
+            },
+            update: { $set: { ...doc, legacy } },
+            upsert: true,
+          },
+        });
+      });
+
+      try {
+        if (bulkOps.length) {
+          log(`${targetDb}.${collection}: >> Updating ${bulkOps.length} documents`);
+          await coll.bulkWrite(bulkOps, { ordered: false });
+        } else {
+          log(`${targetDb}.${collection}: >> Skipping, ${bulkOps.length} documents to update`);
+        }
+      } catch (e) {
+        log(`${targetDb}.${collection}: >>> Building conflicted bulk operations`);
+        const errors = e.result.getWriteErrors();
+        const bulkInserts = [];
+        await Promise.all(errors.map(async (error) => {
+          const id = await generateIdFor(collection);
+          const { u: { $set } } = error.getOperation();
+          const { _id, legacy, ...doc } = $set;
+          bulkInserts.push({
             updateOne: {
               filter: {
                 'legacy.source': legacy.source,
                 'legacy.id': legacy.id,
               },
-              update: { $set: { ...doc, legacy } },
+              update: {
+                $set: {
+                  ...doc,
+                  legacy: {
+                    ...legacy,
+                    conflict: true,
+                  },
+                },
+                $setOnInsert: { _id: id },
+              },
               upsert: true,
             },
           });
-        });
+        }));
 
-        try {
-          if (bulkOps.length) {
-            log(`${targetDb}.${collection}: >> Updating ${bulkOps.length} documents`);
-            await coll.bulkWrite(bulkOps, { ordered: false });
-          } else {
-            log(`${targetDb}.${collection}: >> Skipping, ${bulkOps.length} documents to update`);
-          }
-        } catch (e) {
-          log(`${targetDb}.${collection}: >>> Building conflicted bulk operations`);
-          const errors = e.result.getWriteErrors();
-          const bulkInserts = [];
-          await Promise.all(errors.map(async (error) => {
-            const id = await generateIdFor(collection);
-            const { u: { $set } } = error.getOperation();
-            const { _id, legacy, ...doc } = $set;
-            bulkInserts.push({
-              updateOne: {
-                filter: {
-                  'legacy.source': legacy.source,
-                  'legacy.id': legacy.id,
-                },
-                update: {
-                  $set: {
-                    ...doc,
-                    legacy: {
-                      ...legacy,
-                      conflict: true,
-                    },
-                  },
-                  $setOnInsert: { _id: id },
-                },
-                upsert: true,
-              },
-            });
-          }));
-
-          log(`${targetDb}.${collection}: >>>> Updating ${bulkInserts.length} conflicted documents`);
-          await coll.bulkWrite(bulkInserts, { ordered: false });
-        }
-      }));
-
-      // Update all website.Option names
-      if (key === 'website') {
-        log(`${targetDb}.Option: Updating option names`);
-        const coll = db.collection('Option');
-        await coll.bulkWrite([
-          {
-            updateMany: {
-              filter: { name: { $in: ['Standard Web'] } },
-              update: { $set: { name: 'Standard' } },
-            },
-          },
-          {
-            updateMany: {
-              filter: { name: { $in: ['Pinned'] } },
-              update: { $set: { name: 'Featured Content' } },
-            },
-          },
-        ]);
+        log(`${targetDb}.${collection}: >>>> Updating ${bulkInserts.length} conflicted documents`);
+        await coll.bulkWrite(bulkInserts, { ordered: false });
       }
+    }));
+
+    // Update all website.Option names
+    if (key === 'website') {
+      log(`${targetDb}.Option: Updating option names`);
+      const coll = db.collection('Option');
+      await coll.bulkWrite([
+        {
+          updateMany: {
+            filter: { name: { $in: ['Standard Web'] } },
+            update: { $set: { name: 'Standard' } },
+          },
+        },
+        {
+          updateMany: {
+            filter: { name: { $in: ['Pinned'] } },
+            update: { $set: { name: 'Featured Content' } },
+          },
+        },
+      ]);
     }
 
-    if (references) {
-      log('Updating orphaned references');
-      await Promise.all(collections[key].map(async (collection) => {
-        const coll = db.collection(collection);
-        const cursor = await coll.find({
-          'legacy.source': sourcePrefix,
-          'legacy.conflict': true,
-        }, { sort: { _id: 1 } });
-        const count = await cursor.count();
-        if (count) await resolveConflicts(client, key, collection, cursor);
-      }));
-    }
+    log('Updating orphaned references');
+    await Promise.all(collections[key].map(async (collection) => {
+      const coll = db.collection(collection);
+      const cursor = await coll.find({
+        'legacy.source': sourcePrefix,
+        'legacy.conflict': true,
+      }, { sort: { _id: 1 } });
+      const count = await cursor.count();
+      if (count) await resolveConflicts(client, key, collection, cursor);
+    }));
   }));
 };
 
