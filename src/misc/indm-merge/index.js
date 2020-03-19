@@ -214,6 +214,26 @@ const merge = async (group, account = 'indm') => {
           await coll.bulkWrite(bulkInserts, { ordered: false });
         }
       }));
+
+      // Update all website.Option names
+      if (key === 'website') {
+        log(`${targetDb}.Option: Updating option names`);
+        const coll = db.collection('Option');
+        await coll.bulkWrite([
+          {
+            updateMany: {
+              filter: { name: { $in: ['Standard Web'] } },
+              update: { $set: { name: 'Standard' } },
+            },
+          },
+          {
+            updateMany: {
+              filter: { name: { $in: ['Pinned'] } },
+              update: { $set: { name: 'Featured Content' } },
+            },
+          },
+        ]);
+      }
     }
 
     if (references) {
