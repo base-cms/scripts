@@ -193,7 +193,7 @@ const merge = async (group, account = 'indm') => {
           await Promise.all(errors.map(async (error) => {
             const id = await generateIdFor(collection);
             const { u: { $set } } = error.getOperation();
-            const { legacy } = $set;
+            const { _id, legacy, ...doc } = $set;
             bulkInserts.push({
               updateOne: {
                 filter: {
@@ -202,13 +202,13 @@ const merge = async (group, account = 'indm') => {
                 },
                 update: {
                   $set: {
-                    ...$set,
+                    ...doc,
                     legacy: {
                       ...legacy,
                       conflict: true,
                     },
-                    _id: id,
                   },
+                  $setOnInsert: { _id: id },
                 },
                 upsert: true,
               },
