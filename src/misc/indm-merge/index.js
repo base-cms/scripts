@@ -87,6 +87,10 @@ const mergeAll = async () => {
   const sourcePrefix = 'indm_all';
   log(`\nMigrating ${sourcePrefix} databases.\n`);
 
+  if (MONGO_DSN.includes('baseplatform.io')) {
+    throw new Error('Do not use `all` in production. Use `bootstrap.sh` instead!');
+  }
+
   // Drop stupid collections
   await Promise.all([
     { db: `${sourcePrefix}_platform`, coll: 'Configuration' },
@@ -103,8 +107,9 @@ const mergeAll = async () => {
   ].map(async (ref) => {
     try {
       const db = await client.db(ref.db);
-      log(`Dropping ${ref.db}.${ref.coll}`);
-      await db.dropCollection(ref.coll);
+      log(`SKIPPED -- Dropping ${ref.db}.${ref.coll}`);
+      // await db.dropCollection(ref.coll);
+      await db.stats();
     } catch (e) {
       log(`Unable to drop ${ref.db}.${ref.coll}`);
     }
