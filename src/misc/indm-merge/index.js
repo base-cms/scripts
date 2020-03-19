@@ -13,8 +13,10 @@
  */
 const { createMongoClient, MongoDB: { ObjectID } } = require('@base-cms/db');
 const { iterateCursor } = require('@base-cms/db/utils');
+const { getAsArray } = require('@base-cms/object-path');
 const deserialize = require('./deserialize');
 const resolveConflicts = require('./transforms');
+const buildSectionQuery = require('../../../scripts/build-section-query');
 const { MONGO_DSN } = require('../../env');
 
 const client = createMongoClient(MONGO_DSN, { appname: '@base-cms/scripts', useUnifiedTopology: true });
@@ -247,6 +249,16 @@ const merge = async (group, account = 'indm') => {
       if (count) await resolveConflicts(client, key, collection, cursor);
     }));
   }));
+
+  log('Rebuilding sectionQuery data');
+  const content = await client.collection(`${targetPrefix}_platform`, 'Content');
+  const schedule = await client.collection(`${targetPrefix}_website`, 'Schedule');
+  const updates = await buildSectionQuery({ content, schedule });
+  const bulkOps = getAsArray(updates, 'updates.content').map(({ filter, $set }) => ({ updateOne: { filter, update: $set } }));
+  if (bulkOps.length) {
+    log(`Writing ${bulkOps.length} sectionQuery updates...`);
+    await content.bulkWrite(bulkOps, { ordered: false });
+  }
 };
 
 const main = async () => {
